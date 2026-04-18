@@ -144,16 +144,7 @@ export function Dashboard() {
               Create Senior Profile
             </Button>
           </CardContent>
-          <CardFooter className="justify-center">
-            <Button
-              variant="ghost"
-              onClick={seedData}
-              className="text-amber-600 hover:text-amber-700 hover:bg-amber-100"
-            >
-              <Sparkles className="mr-2 h-4 w-4" />
-              Load Demo Data
-            </Button>
-          </CardFooter>
+
         </Card>
       </div>
     )
@@ -175,17 +166,7 @@ export function Dashboard() {
             is here for you
           </p>
         </div>
-        {callLogs.length === 0 && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={seedData}
-            className="text-amber-600 hover:bg-amber-100 hover:text-amber-700"
-          >
-            <Sparkles className="mr-2 h-4 w-4" />
-            Load Demo Data
-          </Button>
-        )}
+
       </div>
 
       {/* Stats Grid */}

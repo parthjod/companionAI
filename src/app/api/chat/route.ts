@@ -1,43 +1,38 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
-import axios from 'axios';
+import OpenAI from 'openai';
 
-const invokeUrl = "https://integrate.api.nvidia.com/v1/chat/completions";
+const openai = new OpenAI({
+  apiKey: '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',
+  baseURL: 'https://integrate.api.nvidia.com/v1',
+});
 
 async function callQwen(messages: Array<{ role: string; content: string }>) {
-  const stream = false;
-
-  const headers = {
-    "Authorization": "Bearer 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",
-    "Accept": stream ? "text/event-stream" : "application/json"
-  };
-
-  const payload = {
-    "model": "qwen/qwen3.5-397b-a17b",
-    "messages": messages,
-    "max_tokens": 16384,
-    "temperature": 0.60,
-    "top_p": 0.95,
-    "top_k": 20,
-    "presence_penalty": 0,
-    "repetition_penalty": 1,
-    "stream": stream,
-    "chat_template_kwargs": {"enable_thinking":true},
-  };
-
   try {
-    const response = await axios.post(invokeUrl, payload, {
-      headers: headers,
-      responseType: stream ? 'stream' : 'json'
-    });
-    return response.data.choices?.[0]?.message?.content || "I'm sorry, I couldn't generate a response.";
-  } catch (error: any) {
-    if (error.response) {
-      console.error(`HTTP ${error.response.status}`);
-      throw new Error(`NVIDIA API error: ${error.response.status} - ${JSON.stringify(error.response.data)}`);
-    } else {
-      throw error;
+    const completion: any = await openai.chat.completions.create({
+      model: "z-ai/glm4.7",
+      messages: messages as any,
+      temperature: 1,
+      top_p: 1,
+      max_tokens: 16384,
+      chat_template_kwargs: { "enable_thinking": true, "clear_thinking": false },
+      stream: true
+    } as any);
+
+    let fullResponse = "";
+    for await (const chunk of completion) {
+      // @ts-ignore
+      const reasoning = chunk.choices[0]?.delta?.reasoning_content;
+      if (reasoning) process.stdout.write(reasoning);
+      const content = chunk.choices[0]?.delta?.content || '';
+      process.stdout.write(content);
+      fullResponse += content;
     }
+
+    return fullResponse || "I'm sorry, I couldn't generate a response.";
+  } catch (error) {
+    console.error("OpenAI API Error:", error);
+    throw error;
   }
 }
 
