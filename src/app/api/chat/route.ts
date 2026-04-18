@@ -3,8 +3,8 @@ import { db } from '@/lib/db';
 import OpenAI from 'openai';
 
 const openai = new OpenAI({
-  apiKey: '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',
-  baseURL: 'https://integrate.api.nvidia.com/v1',
+  apiKey: process.env.OPENAI_API_KEY,
+  baseURL: process.env.OPENAI_BASE_URL,
 });
 
 async function callQwen(messages: Array<{ role: string; content: string }>) {
