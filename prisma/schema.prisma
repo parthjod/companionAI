@@ -1,0 +1,105 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Senior {
+  id               String   @id @default(cuid())
+  name             String
+  dateOfBirth      String?  // ISO date string
+  city             String?
+  preferredCallTime String  @default("09:00") // HH:mm format
+  timezone         String   @default("America/New_York")
+  profileData      String?  // JSON string: career, family, interests, topics to avoid
+  aiName           String   @default("Clara") // AI companion name
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  familyAccounts       FamilyAccount[]
+  reminders            Reminder[]
+  callLogs             CallLog[]
+  conversationSummaries ConversationSummary[]
+  promptUsages         PromptUsage[]
+}
+
+model FamilyAccount {
+  id           String  @id @default(cuid())
+  email        String  @unique
+  passwordHash String
+  name         String?
+  role         String  @default("primary") // primary | viewer
+  alertMethod  String  @default("both")    // push | sms | both
+  phoneNumber  String?
+  seniorId     String?
+  createdAt    DateTime @default(now())
+
+  senior Senior? @relation(fields: [seniorId], references: [id])
+}
+
+model Reminder {
+  id          String   @id @default(cuid())
+  seniorId    String
+  type        String   // medication | appointment | other
+  description String
+  frequency   String   @default("daily") // daily | weekly | once
+  nextDue     String?  // ISO date string
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  senior Senior @relation(fields: [seniorId], references: [id], onDelete: Cascade)
+}
+
+model CallLog {
+  id              String   @id @default(cuid())
+  seniorId        String
+  scheduledAt     DateTime
+  answeredAt      DateTime?
+  endedAt         DateTime?
+  durationSeconds Int?
+  status          String   @default("scheduled") // scheduled | ringing | active | completed | missed | late_answered
+  createdAt       DateTime @default(now())
+
+  senior                Senior                 @relation(fields: [seniorId], references: [id], onDelete: Cascade)
+  conversationSummary   ConversationSummary?
+}
+
+model ConversationSummary {
+  id        String   @id @default(cuid())
+  seniorId  String
+  callLogId String   @unique
+  summary   String   // JSON string: mood, topics, facts, follow_ups
+  createdAt DateTime @default(now())
+
+  senior  Senior   @relation(fields: [seniorId], references: [id], onDelete: Cascade)
+  callLog CallLog  @relation(fields: [callLogId], references: [id], onDelete: Cascade)
+}
+
+model PromptLibrary {
+  id        String  @id @default(cuid())
+  type      String  // reminiscence | trivia | joke
+  decade    String? // 1950s | 1960s | 1970s | 1980s etc.
+  topicTags String? // JSON array string
+  content   String
+  active    Boolean @default(true)
+
+  promptUsages PromptUsage[]
+}
+
+model PromptUsage {
+  seniorId  String
+  promptId  String
+  usedAt    DateTime @default(now())
+
+  senior Senior       @relation(fields: [seniorId], references: [id], onDelete: Cascade)
+  prompt PromptLibrary @relation(fields: [promptId], references: [id], onDelete: Cascade)
+
+  @@id([seniorId, promptId])
+}
