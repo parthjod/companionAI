@@ -2,12 +2,12 @@ import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import OpenAI from 'openai';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-  baseURL: process.env.OPENAI_BASE_URL,
-});
-
 async function callQwen(messages: Array<{ role: string; content: string }>) {
+  const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY || "dummy",
+    baseURL: process.env.OPENAI_BASE_URL,
+  });
+
   try {
     const completion: any = await openai.chat.completions.create({
       model: "z-ai/glm4.7",
